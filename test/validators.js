@@ -629,6 +629,18 @@ describe('Validators', () => {
     });
   });
 
+  it('should allow user to skip URL length validation', () => {
+    test({
+      validator: 'isURL',
+      args: [{ validate_length: false }],
+      valid: [
+        'http://foobar.com/f',
+        `http://foobar.com/${new Array(2083).join('f')}`,
+      ],
+      invalid: [],
+    });
+  });
+
   it('should validate MAC addresses', () => {
     test({
       validator: 'isMACAddress',
@@ -1043,6 +1055,26 @@ describe('Validators', () => {
         'äbc123',
         'ÄBC11',
         'æøå',
+        '',
+      ],
+    });
+  });
+
+  it('should validate Vietnamese alpha strings', () => {
+    test({
+      validator: 'isAlpha',
+      args: ['vi-VN'],
+      valid: [
+        'thiến',
+        'nghiêng',
+        'xin',
+        'chào',
+        'thế',
+        'giới',
+      ],
+      invalid: [
+        'thầy3',
+        'Ba gà',
         '',
       ],
     });
@@ -1558,6 +1590,21 @@ describe('Validators', () => {
     });
   });
 
+  it('should validate Vietnamese alphanumeric strings', () => {
+    test({
+      validator: 'isAlphanumeric',
+      args: ['vi-VN'],
+      valid: [
+        'Thầy3',
+        '3Gà',
+      ],
+      invalid: [
+        'toang!',
+        'Cậu Vàng',
+      ],
+    });
+  });
+
   it('should validate arabic alphanumeric strings', () => {
     test({
       validator: 'isAlphanumeric',
@@ -1835,6 +1882,30 @@ describe('Validators', () => {
         '-00123',
         ' ',
         '.',
+      ],
+    });
+  });
+
+  it('should validate numeric strings with locale', () => {
+    test({
+      validator: 'isNumeric',
+      args: [{
+        locale: 'fr-FR',
+      }],
+      valid: [
+        '123',
+        '00123',
+        '-00123',
+        '0',
+        '-0',
+        '+123',
+        '123,123',
+        '+000000',
+      ],
+      invalid: [
+        ' ',
+        '',
+        ',',
       ],
     });
   });
@@ -2152,6 +2223,20 @@ describe('Validators', () => {
       ],
       invalid: [
         'XND012345',
+        '0123456789',
+      ],
+    });
+
+    test({
+      validator: 'isPassportNumber',
+      args: ['IN'],
+      valid: [
+        'A-1234567',
+        'A1234567',
+        'X0019390',
+      ],
+      invalid: [
+        'AB-1234567',
         '0123456789',
       ],
     });
@@ -2717,6 +2802,48 @@ describe('Validators', () => {
     });
   });
 
+
+  it('should validate imei strings', () => {
+    test({
+      validator: 'isIMEI',
+      valid: [
+        '352099001761481',
+        '868932036356090',
+        '490154203237518',
+        '546918475942169',
+        '998227667144730',
+        '532729766805999',
+      ],
+      invalid: [
+        '490154203237517',
+        '3568680000414120',
+        '3520990017614823',
+      ],
+    });
+  });
+
+
+  it('should validate imei strings with hyphens', () => {
+    test({
+      validator: 'isIMEI',
+      args: [{ allow_hyphens: true }],
+      valid: [
+        '35-209900-176148-1',
+        '86-893203-635609-0',
+        '49-015420-323751-8',
+        '54-691847-594216-9',
+        '99-822766-714473-0',
+        '53-272976-680599-9',
+      ],
+      invalid: [
+        '49-015420-323751-7',
+        '35-686800-0041412-0',
+        '35-209900-1761482-3',
+      ],
+    });
+  });
+
+
   it('should validate uppercase strings', () => {
     test({
       validator: 'isUppercase',
@@ -3226,6 +3353,20 @@ describe('Validators', () => {
         'rgba(3%,3%,101%,0.3)',
       ],
     });
+
+    // test where includePercentValues is given as false
+    test({
+      validator: 'isRgbColor',
+      args: [false],
+      valid: [
+        'rgb(5,5,5)',
+        'rgba(5,5,5,.3)',
+      ],
+      invalid: [
+        'rgb(4,4,5%)',
+        'rgba(5%,5%,5%)',
+      ],
+    });
   });
 
   it('should validate ISRC code strings', () => {
@@ -3422,6 +3563,12 @@ describe('Validators', () => {
         '$Zs.ewu.su84',
         'ks64$S/9.dy$§kz.3sd73b',
       ],
+      error: [
+        [],
+        {},
+        null,
+        undefined,
+      ],
     });
   });
 
@@ -3475,6 +3622,15 @@ describe('Validators', () => {
       args: ['foo'],
       valid: ['foo', 'foobar', 'bazfoo'],
       invalid: ['bar', 'fobar'],
+    });
+
+    test({
+      validator: 'contains',
+      args: ['foo', {
+        ignoreCase: true,
+      }],
+      valid: ['Foo', 'FOObar', 'BAZfoo'],
+      invalid: ['bar', 'fobar', 'baxoof'],
     });
   });
 
@@ -3810,6 +3966,11 @@ describe('Validators', () => {
     test({
       validator: 'isIBAN',
       valid: [
+        'SC52BAHL01031234567890123456USD',
+        'LC14BOSL123456789012345678901234',
+        'MT31MALT01100000000000000000123',
+        'SV43ACAT00000000000000123123',
+        'EG800002000156789012345180002',
         'BE71 0961 2345 6769',
         'FR76 3000 6000 0112 3456 7890 189',
         'DE91 1000 0000 0123 4567 89',
@@ -3825,6 +3986,7 @@ describe('Validators', () => {
         'TR320010009999901234567890',
         'BR1500000000000010932840814P2',
         'LB92000700000000123123456123',
+        'IR200170000000339545727003',
       ],
       invalid: [
         'XX22YYY1234567890123',
@@ -3943,6 +4105,54 @@ describe('Validators', () => {
         ],
       },
       {
+        locale: 'IN',
+        valid: [
+          '298448863364',
+          '2984 4886 3364',
+        ],
+        invalid: [
+          '99999999R',
+          '12345678Z',
+          '01234567L',
+          '01234567l',
+          'X1234567l',
+          'x1234567l',
+          'X1234567L',
+        ],
+      },
+      {
+        locale: 'IT',
+        valid: [
+          'CR43675TM',
+          'CA79382RA',
+        ],
+        invalid: [
+          'CA00000AA',
+          'CB2342TG',
+          'CS123456A',
+          'C1236EC',
+        ],
+      },
+      {
+        locale: 'NO',
+        valid: [
+          '09053426694',
+          '26028338723',
+          '08031470790',
+          '12051539514',
+          '02077448074',
+          '14035638319',
+          '13031379673',
+          '29126214926',
+        ],
+        invalid: [
+          '09053426699',
+          '00000000000',
+          '26028338724',
+          '92031470790',
+        ],
+      },
+      {
         locale: 'he-IL',
         valid: [
           '219472156',
@@ -4012,9 +4222,18 @@ describe('Validators', () => {
           '235407195106112745',
           '210203197503102721',
           '520323197806058856',
+          '110101491001001',
         ],
         invalid: [
+          '160323197806058856',
+          '010203197503102721',
+          '520323297806058856',
+          '520323197802318856',
           '235407195106112742',
+          '010101491001001',
+          '110101491041001',
+          '160101491001001',
+          '110101940231001',
           'xx1234567',
           '135407195106112742',
           '123456789546',
@@ -4032,6 +4251,7 @@ describe('Validators', () => {
           'X231071922',
           '1234*678Z',
           '12345678!',
+          '235407207006112742',
         ],
       },
       {
@@ -4069,12 +4289,10 @@ describe('Validators', () => {
     ];
 
     let allValid = [];
-    let allInvalid = [];
 
     // Test fixtures
     fixtures.forEach((fixture) => {
       if (fixture.valid) allValid = allValid.concat(fixture.valid);
-      if (fixture.invalid) allInvalid = allInvalid.concat(fixture.invalid);
       test({
         validator: 'isIdentityCard',
         valid: fixture.valid,
@@ -4091,7 +4309,6 @@ describe('Validators', () => {
       ],
       invalid: [
         'foo',
-        ...allInvalid,
       ],
       args: ['any'],
     });
@@ -4279,7 +4496,27 @@ describe('Validators', () => {
         '{ \'key\': \'value\' }',
         'null',
         '1234',
+        '"nope"',
+      ],
+    });
+  });
+
+  it('should validate JSON with primitives', () => {
+    test({
+      validator: 'isJSON',
+      args: [{ allow_primitives: true }],
+      valid: [
+        '{ "key": "value" }',
+        '{}',
+        'null',
         'false',
+        'true',
+      ],
+      invalid: [
+        '{ key: "value" }',
+        '{ \'key\': \'value\' }',
+        '{ "key": value }',
+        '1234',
         '"nope"',
       ],
     });
@@ -4524,6 +4761,35 @@ describe('Validators', () => {
         'Zm9vYmFy====',
       ],
     });
+
+    test({
+      validator: 'isBase64',
+      args: [{ urlSafe: true }],
+      valid: [
+        'bGFkaWVzIGFuZCBnZW50bGVtZW4sIHdlIGFyZSBmbG9hdGluZyBpbiBzcGFjZQ',
+        '1234',
+        'bXVtLW5ldmVyLXByb3Vk',
+        'PDw_Pz8-Pg',
+        'VGhpcyBpcyBhbiBlbmNvZGVkIHN0cmluZw',
+      ],
+      invalid: [
+        ' AA',
+        '\tAA',
+        '\rAA',
+        '',
+        '\nAA',
+        'This+isa/bad+base64Url==',
+        '0K3RgtC+INC30LDQutC+0LTQuNGA0L7QstCw0L3QvdCw0Y8g0YHRgtGA0L7QutCw',
+      ],
+      error: [
+        null,
+        undefined,
+        {},
+        [],
+        42,
+      ],
+    });
+
     for (let i = 0, str = '', encoded; i < 1000; i++) {
       str += String.fromCharCode(Math.random() * 26 | 97); // eslint-disable-line no-bitwise
       encoded = Buffer.from(str).toString('base64');
@@ -4721,6 +4987,31 @@ describe('Validators', () => {
         ],
       },
       {
+        locale: 'ar-LY',
+        valid: [
+          '912220000',
+          '0923330000',
+          '218945550000',
+          '+218958880000',
+          '212220000',
+          '0212220000',
+          '+218212220000',
+        ],
+        invalid: [
+          '9122220000',
+          '00912220000',
+          '09211110000',
+          '+0921110000',
+          '+2180921110000',
+          '021222200000',
+          '213333444444',
+          '',
+          '+212234',
+          '+21',
+          '02122333',
+        ],
+      },
+      {
         locale: 'ar-SY',
         valid: [
           '0944549710',
@@ -4804,6 +5095,45 @@ describe('Validators', () => {
         ],
       },
       {
+        locale: 'bs-BA',
+        valid: [
+          '060123456',
+          '061123456',
+          '062123456',
+          '063123456',
+          '0641234567',
+          '065123456',
+          '066123456',
+          '+38760123456',
+          '+38761123456',
+          '+38762123456',
+          '+38763123456',
+          '+387641234567',
+          '+38765123456',
+          '+38766123456',
+          '0038760123456',
+          '0038761123456',
+          '0038762123456',
+          '0038763123456',
+          '00387641234567',
+          '0038765123456',
+          '0038766123456',
+        ],
+        invalid: [
+          '0601234567',
+          '0611234567',
+          '06212345',
+          '06312345',
+          '064123456',
+          '0651234567',
+          '06612345',
+          '+3866123456',
+          '+3856123456',
+          '00038760123456',
+          '038761123456',
+        ],
+      },
+      {
         locale: 'cs-CZ',
         valid: [
           '+420 123 456 789',
@@ -4842,6 +5172,7 @@ describe('Validators', () => {
         valid: [
           '+49015123456789',
           '+4915123456789',
+          '+4930405044550',
           '015123456789',
           '15123456789',
           '15623456789',
@@ -4852,15 +5183,16 @@ describe('Validators', () => {
           '1631234567',
           '1701234567',
           '17612345678',
-        ],
-        invalid: [
           '15345678910',
           '15412345678',
+        ],
+        invalid: [
+          '34412345678',
+          '14412345678',
           '16212345678',
           '1761234567',
           '16412345678',
           '17012345678',
-          '12345678910',
           '+4912345678910',
         ],
       },
@@ -4927,8 +5259,14 @@ describe('Validators', () => {
           '008618812341234',
           '+8619912341234',
           '+8619812341234',
+          '+8619712341234',
+          '+8619612341234',
+          '+8619512341234',
+          '+8619312341234',
+          '+8619212341234',
           '+8619112341234',
           '17269427292',
+          '16565600001',
           '+8617269427292',
           '008617269427292',
         ],
@@ -5132,6 +5470,23 @@ describe('Validators', () => {
           '356',
           '+35699000',
           '+35610000000',
+        ],
+      },
+      {
+        locale: 'en-PH',
+        valid: [
+          '+639275149120',
+          '+639275142327',
+          '+639003002023',
+          '09275149116',
+          '09194877624',
+        ],
+        invalid: [
+          '12112-13-345',
+          '12345678901',
+          'sx23YW11cyBmZxxXJt123123',
+          '010-38238383',
+          '966684123123-2590',
         ],
       },
       {
@@ -5353,6 +5708,7 @@ describe('Validators', () => {
           '98765432',
           '+6587654321',
           '+6598765432',
+          '+6565241234',
         ],
         invalid: [
           '987654321',
@@ -5420,6 +5776,26 @@ describe('Validators', () => {
           'Vml2YW11cyBmZXJtZtesting123',
           '010-38238383',
           '966684590',
+        ],
+      },
+      {
+        locale: ['en-ZW'],
+        valid: [
+          '+263561890123',
+          '+263715558041',
+          '+263775551112',
+          '+263775551695',
+          '+263715556633',
+        ],
+        invalid: [
+          '12345',
+          '',
+          'Vml2YW11cyBmZXJtZtesting123',
+          '+2631234567890',
+          '+2641234567',
+          '+263981234',
+          '4736338855',
+          '66338855',
         ],
       },
       {
@@ -5572,6 +5948,36 @@ describe('Validators', () => {
         ],
       },
       {
+        locale: 'es-CO',
+        valid: [
+          '+573003321235',
+          '573003321235',
+          '579871235',
+          '3003321235',
+          '3213321235',
+          '3103321235',
+          '3253321235',
+          '3321235',
+          '574321235',
+          '5784321235',
+          '5784321235',
+          '9821235',
+        ],
+        invalid: [
+          '1234',
+          '+57443875615',
+          '57309875615',
+          '57109834567',
+          '5792434567',
+          '5702345689',
+          '5714003425432',
+          '5703013347567',
+          '069834567',
+          '0698345',
+          '969834567',
+        ],
+      },
+      {
         locale: 'es-CL',
         valid: [
           '+56733875615',
@@ -5649,10 +6055,10 @@ describe('Validators', () => {
           '65478932',
           '+346547893210',
           '6547893210',
-          '+34704789321',
-          '704789321',
-          '+34754789321',
-          '754789321',
+          '+3470478932',
+          '7047893210',
+          '+34854789321',
+          '7547893219',
         ],
       },
       {
@@ -6030,20 +6436,27 @@ describe('Validators', () => {
         locale: 'nl-NL',
         valid: [
           '0670123456',
-          '+31670123456',
+          '0612345678',
+          '31612345678',
           '31670123456',
-          '021234567',
-          '+3121234567',
-          '3121234567',
+          '+31612345678',
+          '+31670123456',
+          '+31(0)612345678',
+          '0031612345678',
+          '0031(0)612345678',
         ],
         invalid: [
           '12345',
           '+3112345',
           '3112345',
           '06701234567',
+          '012345678',
           '+3104701234567',
           '3104701234567',
           '0212345678',
+          '021234567',
+          '+3121234567',
+          '3121234567',
           '+310212345678',
           '310212345678',
         ],
@@ -6432,6 +6845,22 @@ describe('Validators', () => {
       ],
       args: [],
     });
+  });
+
+  // de-CH
+  test({
+    validator: 'isMobilePhone',
+    valid: [
+      '+41751112233',
+      '+41761112233',
+      '+41771112233',
+      '+41781112233',
+      '+41791112233',
+    ],
+    invalid: [
+      '+41441112233',
+    ],
+    args: [],
   });
 
   it('should error on invalid locale', () => {
@@ -7775,6 +8204,30 @@ describe('Validators', () => {
         ' ',
       ],
     });
+
+    test({
+      validator: 'isLatLong',
+      args: [{
+        checkDMS: true,
+      }],
+      valid: [
+        '40° 26′ 46″ N, 79° 58′ 56″ W',
+        '40° 26′ 46″ S, 79° 58′ 56″ E',
+        '90° 0′ 0″ S, 180° 0′ 0″ E',
+        '40° 26′ 45.9996″ N, 79° 58′ 55.2″ E',
+        '40° 26′ 46″ n, 79° 58′ 56″ w',
+        '40°26′46″s, 79°58′56″e',
+        '11° 0′ 0.005″ S, 180° 0′ 0″ E',
+        '40°26′45.9996″N, 79°58′55.2″E',
+
+      ],
+      invalid: [
+        '100° 26′ 46″ N, 79° 70′ 56″ W',
+        '40° 89′ 46″ S, 79° 58′ 100″ E',
+        '40° 26.445′ 45″ N, 79° 58′ 55.2″ E',
+        '40° 46″ N, 79° 58′ 56″ W',
+      ],
+    });
   });
 
   it('should validate postal code', () => {
@@ -7797,6 +8250,22 @@ describe('Validators', () => {
           'A1A 1A1',
           'X0A-0H0',
           'V5K 0A1',
+        ],
+      },
+      {
+        locale: 'ES',
+        valid: [
+          '01001',
+          '52999',
+          '27880',
+        ],
+        invalid: [
+          '123',
+          '1234',
+          '53000',
+          '052999',
+          '0123',
+          'abcde',
         ],
       },
       {
@@ -7896,6 +8365,35 @@ describe('Validators', () => {
         ],
       },
       {
+        locale: 'IL',
+        valid: [
+          '10200',
+          '10292',
+          '10300',
+          '10329',
+          '3885500',
+          '4290500',
+          '4286000',
+          '7080000',
+        ],
+        invalid: [
+          '123',
+          '012345',
+          '011111',
+          '101123',
+          '291123',
+          '351123',
+          '541123',
+          '551123',
+          '651123',
+          '661123',
+          '861123',
+          '871123',
+          '881123',
+          '891123',
+        ],
+      },
+      {
         locale: 'BG',
         valid: [
           '1000',
@@ -7919,6 +8417,22 @@ describe('Validators', () => {
           '1118 BH',
           '3950IO',
           '3997 GH',
+        ],
+      },
+      {
+        locale: 'NP',
+        valid: [
+          '10811',
+          '32600',
+          '56806',
+          '977',
+        ],
+        invalid: [
+          '11977',
+          'asds',
+          '13 32',
+          '-977',
+          '97765',
         ],
       },
       {
@@ -8139,6 +8653,36 @@ describe('Validators', () => {
     });
   });
 
+
+  it('should validate taxID', () => {
+    test({
+      validator: 'isTaxID',
+      valid: [
+        '01-1234567',
+        '01 1234567',
+        '011234567'],
+      invalid: [
+        '0-11234567',
+        '01#1234567',
+        '01  1234567',
+        '01 1234 567'],
+    });
+    test({
+      validator: 'isTaxID',
+      args: ['is-NOT'],
+      error: [
+        '01-1234567',
+        '01 1234567',
+        '011234567',
+        '0-11234567',
+        '01#1234567',
+        '01  1234567',
+        '01 1234 567',
+      ],
+    });
+  });
+
+
   it('should validate slug', () => {
     test({
       validator: 'isSlug',
@@ -8151,6 +8695,38 @@ describe('Validators', () => {
         'not-slug-',
         '_not-slug',
         'not-slug_',
+        'not slug',
+      ],
+    });
+  });
+
+  it('should validate base64URL', () => {
+    test({
+      validator: 'isBase64',
+      args: [{ urlSafe: true }],
+      valid: [
+        'bGFkaWVzIGFuZCBnZW50bGVtZW4sIHdlIGFyZSBmbG9hdGluZyBpbiBzcGFjZQ',
+        '1234',
+        'bXVtLW5ldmVyLXByb3Vk',
+        'PDw_Pz8-Pg',
+        'VGhpcyBpcyBhbiBlbmNvZGVkIHN0cmluZw',
+      ],
+      invalid: [
+        ' AA',
+        '\tAA',
+        '\rAA',
+        '\nAA',
+        '123=',
+        '',
+        'This+isa/bad+base64Url==',
+        '0K3RgtC+INC30LDQutC+0LTQuNGA0L7QstCw0L3QvdCw0Y8g0YHRgtGA0L7QutCw',
+      ],
+      error: [
+        null,
+        undefined,
+        {},
+        [],
+        42,
       ],
     });
   });
